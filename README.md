@@ -2,12 +2,6 @@
 
 With this docker image you don't need to install the Flutter and Android SDK on your developer machine. Everything is ready to use inclusive an emulator device (Pixel with Android 9). With a shell alias you won't recognize a difference between the image and a local installation. If you are using VSCode you can also use this image as your devcontainer.
 
-## Supported tags
-
-- [`latest`](https://github.com/matsp/docker-flutter/blob/master/stable/Dockerfile)
-- [`beta`](https://github.com/matsp/docker-flutter/tree/master/beta)
-- [`dev`](https://github.com/matsp/docker-flutter/tree/master/dev)
-
 ## Entrypoints
 
 - `flutter` (default)
@@ -23,7 +17,7 @@ When you want to run the `flutter-android-emulator` entrypoint your host must su
 Executing e.g. `flutter help` in the current directory (appended arguments are passed to flutter in the container):
 
 ```shell
-docker run --rm -e UID=$(id -u) -e GID=$(id -g) --workdir /project -v "$PWD":/project matspfeiffer/flutter help
+docker run --rm -e UID=$(id -u) -e GID=$(id -g) --workdir /project -v "$PWD":/project pasowa/flutter help
 ```
 
 When you don't set the `UID` and `GID` the files will be owned by `G-/UID=1000`.
@@ -33,7 +27,7 @@ When you don't set the `UID` and `GID` the files will be owned by `G-/UID=1000`.
 Connecting to a device connected via usb is possible via:
 
 ```shell
-docker run --rm -e UID=$(id -u) -e GID=$(id -g) --workdir /project -v "$PWD":/project --device=/dev/bus -v /dev/bus/usb:/dev/bus/usb matspfeiffer/flutter devices
+docker run --rm -e UID=$(id -u) -e GID=$(id -g) --workdir /project -v "$PWD":/project --device=/dev/bus -v /dev/bus/usb:/dev/bus/usb pasowa/flutter devices
 ```
 
 ### flutter-android-emulator
@@ -41,7 +35,7 @@ docker run --rm -e UID=$(id -u) -e GID=$(id -g) --workdir /project -v "$PWD":/pr
 To achieve the best performance we will mount the X11 directory, DRI and KVM device of the host to get full hardware acceleration:
 
 ```shell
-xhost local:$USER && docker run --rm -ti -e UID=$(id -u) -e GID=$(id -g) -p 42000:42000 --workdir /project --device /dev/kvm --device /dev/dri:/dev/dri -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY -v "$PWD":/project --entrypoint flutter-android-emulator  matspfeiffer/flutter
+xhost local:$USER && docker run --rm -ti -e UID=$(id -u) -e GID=$(id -g) -p 42000:42000 --workdir /project --device /dev/kvm --device /dev/dri:/dev/dri -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY -v "$PWD":/project --entrypoint flutter-android-emulator  pasowa/flutter
 ```
 
 ### flutter-web
@@ -49,7 +43,7 @@ xhost local:$USER && docker run --rm -ti -e UID=$(id -u) -e GID=$(id -g) -p 4200
 You app will be served on localhost:8090:
 
 ```shell
-docker run --rm -ti -e UID=$(id -u) -e GID=$(id -g) -p 42000:42000 -p 8090:8090  --workdir /project -v "$PWD":/project --entrypoint flutter-web matspfeiffer/flutter
+docker run --rm -ti -e UID=$(id -u) -e GID=$(id -g) -p 42000:42000 -p 8090:8090  --workdir /project -v "$PWD":/project --entrypoint flutter-web pasowa/flutter
 ```
 
 ## VSCode devcontainer
@@ -65,7 +59,7 @@ Add this `.devcontainer/devcontainer.json` to your VSCode project:
 ```json
 {
   "name": "Flutter",
-  "image": "matspfeiffer/flutter",
+  "image": "pasowa/flutter",
   "extensions": ["dart-code.dart-code", "dart-code.flutter"],
   "runArgs": [
     "--device",
@@ -89,7 +83,7 @@ Add this `.devcontainer/devcontainer.json` to your VSCode project:
 ```json
 {
   "name": "Flutter",
-  "image": "matspfeiffer/flutter",
+  "image": "pasowa/flutter",
   "extensions": ["dart-code.dart-code", "dart-code.flutter"]
 }
 ```
@@ -108,12 +102,15 @@ adb connect host.docker.internal:5555
 
 You can now choose the device to start debugging.
 
+## Building
+
+All software contained in this image can be easily customized just by specifing arguments with version number to the `docker build` command:
+```shell
+docker build --build-arg FLUTTER_VERSION=3.0.5 --build-arg FLUTTER_CHANNEL=stable ...
+```
+
 ## FAQ
 
 > Why not using alpine?
 
 Alpine is based on `musl` instead of `glibc`. The dart binaries packaged by flutter are linked against `glibc` so the Flutter SDK is not compatible with Alpine - it's possible to fix this but not the core attempt of this image.
-
-> Why OpenJDK 8?
-
-With higher versions the sdkmanager of the android tools throws errors while fetching maven dependencies.
